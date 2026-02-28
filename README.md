@@ -1,7 +1,7 @@
 
 # Bitespeed Backend Task – Identity Reconciliation
 
-## 📌 Overview
+## Overview
 
 This project implements the **Identity Reconciliation Service** as described in the official Bitespeed Backend Task.
 
@@ -15,9 +15,7 @@ It ensures:
 * Deterministic primary selection (oldest contact remains primary)
 * Consolidated response format as per specification
 
----
-
-## 🧠 Problem Summary
+## Problem Summary
 
 Bitespeed stores customer contact information in a relational table named `Contact`.
 
@@ -34,126 +32,107 @@ A single customer may have multiple rows in the database.
 
 The service exposes a `POST /identify` endpoint that returns consolidated identity information.
 
----
-
-## 🗄 Database Schema
+## Database Schema
 
 ```sql
 CREATE TABLE Contact (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  phoneNumber VARCHAR(20),
-  email VARCHAR(255),
-  linkedId INT,
-  linkPrecedence ENUM('primary', 'secondary') NOT NULL,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deletedAt TIMESTAMP NULL
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   phoneNumber VARCHAR(20),
+   email VARCHAR(255),
+   linkedId INT,
+   linkPrecedence ENUM('primary', 'secondary') NOT NULL,
+   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+   deletedAt TIMESTAMP NULL
 );
 ```
 
 The table is automatically initialized on server startup.
 
----
+## API Specification
 
-## 🚀 API Specification
+### Endpoint: POST /identify
 
-### Endpoint
-
-POST /identify
-
-### Request Body (JSON)
+**Request Body (JSON)**
 
 ```json
 {
-  "email": "string (optional)",
-  "phoneNumber": "string (optional)"
+   "email": "string (optional)",
+   "phoneNumber": "string (optional)"
 }
 ```
 
 > At least one of `email` or `phoneNumber` must be provided.
 
----
-
-## ✅ Response Format
+**Response Format**
 
 ```json
 {
-  "contact": {
-    "primaryContatctId": number,
-    "emails": string[],
-    "phoneNumbers": string[],
-    "secondaryContactIds": number[]
-  }
+   "contact": {
+      "primaryContatctId": number,
+      "emails": string[],
+      "phoneNumbers": string[],
+      "secondaryContactIds": number[]
+   }
 }
 ```
 
-### Response Rules
+**Response Rules**
 
-* First element of `emails[]` → primary contact email
-* First element of `phoneNumbers[]` → primary contact phone
-* `secondaryContactIds[]` → all secondary contact IDs linked to primary
+* First element of `emails[]` is the primary contact email
+* First element of `phoneNumbers[]` is the primary contact phone
+* `secondaryContactIds[]` contains all secondary contact IDs linked to primary
 
----
+## Example
 
-## 🔄 Example
-
-### Request
+**Request**
 
 ```json
 {
-  "email": "mcfly@hillvalley.edu",
-  "phoneNumber": "123456"
+   "email": "mcfly@hillvalley.edu",
+   "phoneNumber": "123456"
 }
 ```
 
-### Response
+**Response**
 
 ```json
 {
-  "contact": {
-    "primaryContatctId": 1,
-    "emails": [
-      "lorraine@hillvalley.edu",
-      "mcfly@hillvalley.edu"
-    ],
-    "phoneNumbers": [
-      "123456"
-    ],
-    "secondaryContactIds": [23]
-  }
+   "contact": {
+      "primaryContatctId": 1,
+      "emails": [
+         "lorraine@hillvalley.edu",
+         "mcfly@hillvalley.edu"
+      ],
+      "phoneNumbers": [
+         "123456"
+      ],
+      "secondaryContactIds": [23]
+   }
 }
 ```
 
----
-
-## 🧠 Business Logic Covered
-
-This implementation supports:
+## Supported Features
 
 * New primary creation
 * Secondary creation on partial match
-* Exact match (no duplicate insertion)
+* Exact match detection (no duplicate insertion)
 * Primary-to-secondary conversion
 * Merging of two primary clusters
 * Deterministic oldest-primary resolution
-* Email-only requests
-* Phone-only requests
+* Email-only and phone-only requests
 * Null-safe handling
 * Transaction-safe database operations
 
----
-
-## 🛠 Tech Stack
+## Tech Stack
 
 * Node.js
 * Express.js
-* MySQL (Railway hosted)
+* MySQL
 * MVC Architecture
-* MySQL Transactions
+* Database Transactions
 
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```
 ├── controllers/
@@ -169,9 +148,7 @@ This implementation supports:
 └── README.md
 ```
 
----
-
-## ▶️ Running Locally
+## Getting Started
 
 ### 1. Install Dependencies
 
@@ -179,7 +156,9 @@ This implementation supports:
 npm install
 ```
 
-### 2. Create `.env`
+### 2. Configure Environment
+
+Create a `.env` file:
 
 ```
 DB_HOST=your_host
@@ -196,31 +175,42 @@ PORT=3000
 npm start
 ```
 
-Server runs at:
+The server runs at `http://localhost:3000`.
+
+## Deployment
+
+**Base URL**
 
 ```
-http://localhost:3000
+https://bitespeed-identity-reconciliation-sy46.onrender.com
 ```
 
----
-
-## 🌐 Hosted Endpoint
-
-Live endpoint:
+**API Endpoint**
 
 ```
-https://your-deployed-url/identify
-
+POST https://bitespeed-identity-reconciliation-sy46.onrender.com/identify
 ```
 
----
+**Note:** Only the `/identify` endpoint accepts POST requests.
 
-## 🧪 Testing
+## Testing
 
-* Use JSON body
-* Set `Content-Type: application/json`
-* Do NOT use form-data
+Use the following configuration:
 
----
+* Content-Type: `application/json`
+* Method: `POST`
+* Endpoint: `/identify`
 
+**Example Request**
+
+```bash
+POST https://bitespeed-identity-reconciliation-sy46.onrender.com/identify
+Content-Type: application/json
+
+{
+   "email": "alpha@gmail.com",
+   "phoneNumber": "111"
+}
+
+```
 
